@@ -1,0 +1,93 @@
+export PATH="/bin:/sbin:/usr/bin:/usr/local/bin:/usr/sbin"
+
+# Wait a bit for the kernel to stop writing messages
+/bin/sleep 5
+
+# Clear screen
+/bin/echo -ne "\x1b[H\x1b[J"
+
+/bin/echo "    hello from ramdisk" 
+/bin/echo     
+/bin/echo "mounting filesystem..."
+
+# FTL is slow on iPhone 2g. Wait a bit before trying to touch the fs
+/bin/sleep 5
+/sbin/fsck_hfs -fy /dev/disk0s1 >/dev/null 2>&1
+/sbin/fsck_hfs -fy /dev/disk0s2 >/dev/null 2>&1
+
+/sbin/mount_hfs -o noasync,sync /dev/disk0s1 /mnt1 >/dev/null 2>&1
+/sbin/mount_hfs -o noasync,sync /dev/disk0s2 /mnt2 >/dev/null 2>&1 
+
+if [ ! -f "/mnt1/System/Library/CoreServices/SystemVersion.plist" ]; then
+	/bin/echo "f/s not ready, waiting a bit longer..."
+    /bin/sleep 20
+
+    /sbin/fsck_hfs -fy /dev/disk0s1 >/dev/null 2>&1
+    /sbin/fsck_hfs -fy /dev/disk0s2 >/dev/null 2>&1
+
+    /sbin/mount_hfs -o noasync,sync /dev/disk0s1 /mnt1 >/dev/null 2>&1
+    /sbin/mount_hfs -o noasync,sync /dev/disk0s2 /mnt2 >/dev/null 2>&1
+fi 
+
+/sbin/mount -uw /
+
+export DYLD_FRAMEWORK_PATH=/mnt1/System/Library/Frameworks
+export DYLD_LIBRARY_PATH=/mnt1/usr/lib
+/files/showPic /files/boot-logo-fullscreen.png &
+
+/usr/bin/nvram boot-args=""
+/usr/bin/nvram auto-boot="true"
+# /usr/bin/nvram auto-boot="false"
+
+# Copy an fstab that mounts rootfs as r/w
+/bin/cp /files/fstab /mnt1/etc/fstab
+
+# Copy ssh stuff
+/bin/mkdir -p /mnt1/etc/ssh
+/bin/cp /etc/ssh/* /mnt1/etc/ssh/
+/bin/cp /etc/ssh_config /mnt1/etc/ssh/
+/bin/cp /etc/sshd_config /mnt1/etc/ssh/
+/bin/cp /usr/bin/scp /mnt1/usr/bin/scp
+/bin/cp /sbin/sshd  /mnt1/usr/sbin/sshd
+/bin/mkdir -p /mnt1/usr/libexec/
+/bin/cp /sbin/sftp-server /mnt1/usr/libexec/sftp-server
+/bin/cp /files/org.openssh.sshd.plist /mnt1/System/Library/LaunchDaemons/org.openssh.sshd.plist
+/bin/cp /etc/master.passwd /mnt/etc/master.passwd
+
+# Copy some basic cmds over to the rootfs
+/bin/cp /bin/cat /mnt1/usr/bin/cat
+/bin/cp /bin/chmod /mnt1/usr/bin/chmod
+/bin/cp /bin/chown /mnt1/usr/bin/chown
+/bin/cp /bin/cp /mnt1/usr/bin/cp
+/bin/cp /bin/echo /mnt1/usr/bin/echo
+/bin/cp /bin/grep /mnt1/usr/bin/grep
+/bin/cp /bin/ln /mnt1/usr/bin/ln
+/bin/cp /bin/ls /mnt1/usr/bin/ls
+/bin/cp /bin/mkdir /mnt1/usr/bin/mkdir
+/bin/cp /bin/mv /mnt1/usr/bin/mv
+/bin/cp /bin/ps /mnt1/usr/bin/ps
+/bin/cp /bin/rm /mnt1/usr/bin/rm
+/bin/cp /bin/sh /mnt1/usr/bin/sh
+/bin/cp /bin/sleep /mnt1/usr/bin/sleep
+/bin/cp /bin/stty /mnt1/usr/bin/stty
+/bin/cp /bin/sync /mnt1/usr/bin/sync
+/bin/cp /bin/uname /mnt1/usr/bin/uname
+/bin/cp /usr/bin/base64 /mnt1/usr/bin/base64
+/bin/cp /usr/bin/du /mnt1/usr/bin/du
+/bin/cp /usr/bin/env /mnt1/usr/bin/env
+/bin/cp /usr/bin/ifconfig /mnt1/usr/bin/ifconfig
+/bin/cp /usr/bin/killall /mnt1/usr/bin/killall
+/bin/cp /usr/bin/md5sum /mnt1/usr/bin/md5sum
+/bin/cp /usr/bin/nano /mnt1/usr/bin/nano
+/bin/cp /usr/bin/nvram /mnt1/usr/bin/nvram
+/bin/cp /usr/bin/sw_vers /mnt1/usr/bin/sw_vers
+/bin/cp /usr/bin/tar /mnt1/usr/bin/tar
+/bin/cp /usr/bin/umount /mnt1/usr/bin/umount
+/bin/cp /usr/bin/unzip /mnt1/usr/bin/unzip
+
+/bin/cp /usr/lib/libintl.8.dylib /mnt1/usr/lib/libintl.8.dylib
+
+# Boot device
+/sbin/reboot
+
+while (true); do sleep 1; done

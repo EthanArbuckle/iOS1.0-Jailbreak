@@ -1,0 +1,6 @@
+*.img
+.venv/
+.mypy_cache/
+.DS_Store
+*.xcuserdatad/
+*/xcuserdata

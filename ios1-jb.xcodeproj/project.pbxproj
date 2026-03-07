@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		5F0E46E22F5BFA8B00C8430F /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5F0E46E12F5BFA8B00C8430F /* CoreFoundation.framework */; };
+		5F0E46E42F5BFA9300C8430F /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5F0E46E32F5BFA9300C8430F /* IOKit.framework */; };
+		5F0E46E62F5BFA9900C8430F /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5F0E46E52F5BFA9900C8430F /* Security.framework */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		5FC4E6EE2F536E2B0013D085 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -19,6 +25,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		5F0E46E12F5BFA8B00C8430F /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		5F0E46E32F5BFA9300C8430F /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+		5F0E46E52F5BFA9900C8430F /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		5FC4E6F02F536E2B0013D085 /* ios1-jb */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "ios1-jb"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -35,16 +44,30 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5F0E46E22F5BFA8B00C8430F /* CoreFoundation.framework in Frameworks */,
+				5F0E46E62F5BFA9900C8430F /* Security.framework in Frameworks */,
+				5F0E46E42F5BFA9300C8430F /* IOKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		5F0E46E02F5BFA8B00C8430F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				5F0E46E52F5BFA9900C8430F /* Security.framework */,
+				5F0E46E32F5BFA9300C8430F /* IOKit.framework */,
+				5F0E46E12F5BFA8B00C8430F /* CoreFoundation.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		5FC4E6E72F536E2B0013D085 = {
 			isa = PBXGroup;
 			children = (
 				5FC4E6F22F536E2B0013D085 /* ios1-jb */,
+				5F0E46E02F5BFA8B00C8430F /* Frameworks */,
 				5FC4E6F12F536E2B0013D085 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -249,6 +272,15 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 44L979X757;
 				ENABLE_HARDENED_RUNTIME = YES;
+				HEADER_SEARCH_PATHS = dependencies/include/;
+				LIBRARY_SEARCH_PATHS = dependencies/libs/;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = (
+					"-lusb-1.0",
+					"-lcrypto",
+					"-lpng",
+					"-lz",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -259,6 +291,15 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 44L979X757;
 				ENABLE_HARDENED_RUNTIME = YES;
+				HEADER_SEARCH_PATHS = dependencies/include/;
+				LIBRARY_SEARCH_PATHS = dependencies/libs/;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = (
+					"-lusb-1.0",
+					"-lcrypto",
+					"-lpng",
+					"-lz",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
