@@ -33,7 +33,7 @@ fi
 
 export DYLD_FRAMEWORK_PATH=/mnt1/System/Library/Frameworks
 export DYLD_LIBRARY_PATH=/mnt1/usr/lib
-/files/showPic /files/boot-logo-fullscreen.png &
+/files/show_image /files/boot-logo-fullscreen.png &
 
 /usr/bin/nvram boot-args=""
 /usr/bin/nvram auto-boot="true"
