@@ -9,6 +9,7 @@
 	<key>ProgramArguments</key>
 	<array>
 		<string>/usr/sbin/sshd</string>
+		<string>-D</string>
 	</array>
 </dict>
 </plist>
