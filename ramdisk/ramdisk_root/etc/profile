@@ -31,6 +31,8 @@ fi
 
 /sbin/mount -uw /
 
+# `show_image` draws our logo to the screen while in the ramdisk.
+# DYLD_*_PATH vars makes it look to /mnt1/ for the frameworks it depends on
 export DYLD_FRAMEWORK_PATH=/mnt1/System/Library/Frameworks
 export DYLD_LIBRARY_PATH=/mnt1/usr/lib
 /files/show_image /files/boot-logo-fullscreen.png &
@@ -89,7 +91,10 @@ export DYLD_LIBRARY_PATH=/mnt1/usr/lib
 /bin/cp /usr/bin/umount /mnt1/usr/bin/umount
 /bin/cp /usr/bin/unzip /mnt1/usr/bin/unzip
 
+# Needed by `ls`
 /bin/cp /usr/lib/libintl.8.dylib /mnt1/usr/lib/libintl.8.dylib
+# Needed by `nano`
+/bin/cp /usr/lib/libncurses.5.dylib /mnt1/usr/lib/libncurses.5.dylib
 
 # Boot device
 /sbin/reboot
