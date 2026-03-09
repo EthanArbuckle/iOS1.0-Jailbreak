@@ -16,7 +16,7 @@ typedef struct {
 } payload_t;
 
 
-kern_return_t load_file(const char *path, payload_t *payload);
+kern_return_t load_embedded_file(const char *name, payload_t *payload);
 void payload_free(payload_t *payload);
 
 #endif

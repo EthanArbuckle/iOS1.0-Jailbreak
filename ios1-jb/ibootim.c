@@ -13,6 +13,7 @@
 #include <png.h>
 #include "ibootim.h"
 #include "crt.h"
+#include "file_payload.h"
 
 #define APPLE8900_HEADER_SIZE 0x800
 
@@ -29,6 +30,12 @@ struct encode_state {
     int match_position;
     int match_length;
 };
+
+typedef struct {
+    const uint8_t *data;
+    size_t size;
+    size_t offset;
+} png_mem_read_state_t;
 
 static void init_state(struct encode_state *sp) {
     memset(sp, 0, sizeof(*sp));
@@ -263,44 +270,32 @@ static void png_warn_fn(png_structp png_ptr, png_const_charp msg) {
     fprintf(stderr, "libpng warning: %s\n", msg);
 }
 
-kern_return_t ibootim_png_to_raw(const char *png_path, const char *template_path, uint8_t **out_buf, size_t *out_size) {
-
-    FILE *tf = fopen(template_path, "rb");
-    if (tf == NULL) {
-        fprintf(stderr, "Failed to open template: %s\n", template_path);
-        return KERN_FAILURE;
+static void png_read_from_mem(png_structp png_ptr, png_bytep out, png_size_t count) {
+    png_mem_read_state_t *state = (png_mem_read_state_t *)png_get_io_ptr(png_ptr);
+    if (state->offset + count > state->size) {
+        png_error(png_ptr, "Read past end of buffer");
+        return;
     }
 
-    fseek(tf, 0, SEEK_END);
-    long template_file_size = ftell(tf);
-    fseek(tf, 0, SEEK_SET);
+    memcpy(out, state->data + state->offset, count);
+    state->offset += count;
+}
 
-    if (template_file_size < (long)(APPLE8900_HEADER_SIZE + sizeof(img2_inner_header_t) + sizeof(ibootim_header_t))) {
+kern_return_t ibootim_png_to_raw(const payload_t *png_payload, const payload_t *template_payload, uint8_t **out_buf, size_t *out_size) {
+    if (template_payload->size < (APPLE8900_HEADER_SIZE + sizeof(img2_inner_header_t) + sizeof(ibootim_header_t))) {
         fprintf(stderr, "Template file too small\n");
-        fclose(tf);
         return KERN_FAILURE;
     }
 
-    uint8_t *template_buf = malloc((size_t)template_file_size);
-    if (template_buf == NULL) {
-        fclose(tf);
-        return KERN_NO_SPACE;
-    }
-
-    fread(template_buf, 1, (size_t)template_file_size, tf);
-    fclose(tf);
-
-    img2_inner_header_t *img2_hdr = (img2_inner_header_t *)(template_buf + APPLE8900_HEADER_SIZE);
+    img2_inner_header_t *img2_hdr = (img2_inner_header_t *)(template_payload->data + APPLE8900_HEADER_SIZE);
     if (img2_hdr->signature != IMG2_SIGNATURE) {
         fprintf(stderr, "No Img2 signature at offset 0x800\n");
-        free(template_buf);
         return KERN_FAILURE;
     }
 
-    ibootim_header_t *ibootim_hdr = (ibootim_header_t *)(template_buf + APPLE8900_HEADER_SIZE + sizeof(img2_inner_header_t));
+    ibootim_header_t *ibootim_hdr = (ibootim_header_t *)(template_payload->data + APPLE8900_HEADER_SIZE + sizeof(img2_inner_header_t));
     if (memcmp(ibootim_hdr->signature, IBOOTIM_SIGNATURE, 7) != 0) {
         fprintf(stderr, "No iBootIm signature at offset 0xC00\n");
-        free(template_buf);
         return KERN_FAILURE;
     }
 
@@ -310,50 +305,35 @@ kern_return_t ibootim_png_to_raw(const char *png_path, const char *template_path
     ibootim_header_t saved_ibootim_hdr;
     memcpy(&saved_ibootim_hdr, ibootim_hdr, sizeof(ibootim_header_t));
 
-    free(template_buf);
-
-    FILE *fp = fopen(png_path, "rb");
-    if (fp == NULL) {
-        fprintf(stderr, "Failed to open PNG: %s\n", png_path);
-        return KERN_FAILURE;
-    }
-
-    unsigned char sig[8];
-    size_t sig_read = fread(sig, 1, 8, fp);
-    if (sig_read != 8 || png_sig_cmp(sig, 0, 8) != 0) {
+    if (png_payload->size < 8 || png_sig_cmp(png_payload->data, 0, 8) != 0) {
         fprintf(stderr, "Not a valid PNG file\n");
-        fclose(fp);
         return KERN_FAILURE;
     }
-    fseek(fp, 0, SEEK_SET);
 
     png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, png_error_fn, png_warn_fn);
     if (png_ptr == NULL) {
-        fclose(fp);
         return KERN_NO_SPACE;
     }
 
     png_infop info_ptr = png_create_info_struct(png_ptr);
     if (info_ptr == NULL) {
         png_destroy_read_struct(&png_ptr, NULL, NULL);
-        fclose(fp);
         return KERN_NO_SPACE;
     }
 
     png_infop end_info = png_create_info_struct(png_ptr);
     if (end_info == NULL) {
         png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
-        fclose(fp);
         return KERN_NO_SPACE;
     }
 
     if (setjmp(png_jmpbuf(png_ptr))) {
         png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
-        fclose(fp);
         return KERN_FAILURE;
     }
 
-    png_set_read_fn(png_ptr, fp, png_read_from_file);
+    png_mem_read_state_t read_state = { .data = png_payload->data, .size = png_payload->size, .offset = 0 };
+    png_set_read_fn(png_ptr, &read_state, png_read_from_mem);
     png_read_info(png_ptr, info_ptr);
     png_set_expand(png_ptr);
     png_set_strip_16(png_ptr);
@@ -367,14 +347,12 @@ kern_return_t ibootim_png_to_raw(const char *png_path, const char *template_path
     if (width > 320 || height > 480) {
         fprintf(stderr, "PNG dimensions %ux%u exceed 320x480\n", width, height);
         png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
-        fclose(fp);
         return KERN_FAILURE;
     }
 
     if (png_get_bit_depth(png_ptr, info_ptr) != 8) {
         fprintf(stderr, "Bit depth must be 8, got %d\n", png_get_bit_depth(png_ptr, info_ptr));
         png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
-        fclose(fp);
         return KERN_FAILURE;
     }
 
@@ -389,7 +367,6 @@ kern_return_t ibootim_png_to_raw(const char *png_path, const char *template_path
     else {
         fprintf(stderr, "Unexpected color type after transforms: %d\n", color_type);
         png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
-        fclose(fp);
         return KERN_FAILURE;
     }
 
@@ -398,7 +375,6 @@ kern_return_t ibootim_png_to_raw(const char *png_path, const char *template_path
     uint8_t *pixel_buf = malloc(pixel_data_size);
     if (pixel_buf == NULL) {
         png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
-        fclose(fp);
         return KERN_NO_SPACE;
     }
 
@@ -406,7 +382,6 @@ kern_return_t ibootim_png_to_raw(const char *png_path, const char *template_path
     if (row_pointers == NULL) {
         free(pixel_buf);
         png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
-        fclose(fp);
         return KERN_NO_SPACE;
     }
 
@@ -417,7 +392,6 @@ kern_return_t ibootim_png_to_raw(const char *png_path, const char *template_path
     png_read_image(png_ptr, row_pointers);
     png_read_end(png_ptr, end_info);
     png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
-    fclose(fp);
     free(row_pointers);
 
     size_t compress_buf_size = pixel_data_size * 2;

@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <mach/mach.h>
+#include "file_payload.h"
 
 #define IMG2_SIGNATURE     0x496D6732
 #define IBOOTIM_SIGNATURE  "iBootIm"
@@ -52,6 +53,6 @@ typedef struct {
 
 #pragma pack(pop)
 
-kern_return_t ibootim_png_to_raw(const char *png_path, const char *template_path, uint8_t **out_buf, size_t *out_size);
+kern_return_t ibootim_png_to_raw(const payload_t *png_payload, const payload_t *template_payload, uint8_t **out_buf, size_t *out_size);
 
 #endif

@@ -6,35 +6,27 @@
 //
 
 #include "file_payload.h"
-#include <stdlib.h>
+#include <mach-o/dyld.h>
+#include <mach-o/getsect.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 
-kern_return_t load_file(const char *path, payload_t *payload) {
-    FILE *f = fopen(path, "rb");
-    if (f == NULL) {
+kern_return_t load_embedded_file(const char *name, payload_t *payload) {
+    unsigned long size = 0;
+    const struct mach_header_64 *header = (const struct mach_header_64 *)_dyld_get_image_header(0);
+    uint8_t *data = getsectiondata(header, "__DATA", name, &size);
+    if (data == NULL) {
         return KERN_FAILURE;
     }
 
-    fseek(f, 0, SEEK_END);
-    payload->size = ftell(f);
-    fseek(f, 0, SEEK_SET);
-
-    payload->data = malloc(payload->size);
+    payload->data = malloc(size);
     if (payload->data == NULL) {
-        fclose(f);
         return KERN_NO_SPACE;
     }
 
-    size_t read_size = fread(payload->data, 1, payload->size, f);
-    fclose(f);
-
-    if (read_size != payload->size) {
-        free(payload->data);
-        payload->data = NULL;
-        return KERN_FAILURE;
-    }
-
+    memcpy(payload->data, data, size);
+    payload->size = size;
     return KERN_SUCCESS;
 }
 
