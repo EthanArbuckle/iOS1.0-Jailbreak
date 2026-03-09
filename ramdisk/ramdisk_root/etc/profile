@@ -42,6 +42,10 @@ export DYLD_LIBRARY_PATH=/mnt1/usr/lib
 # Copy an fstab that mounts rootfs as r/w
 /bin/cp /files/fstab /mnt1/etc/fstab
 
+# Enable logging to /var/log/syslog
+/bin/cp /files/com.apple.syslogd.plist /mnt1/System/Library/LaunchDaemons/com.apple.syslogd.plist
+/bin/cp /files/syslog.conf /mn1/etc/syslog.conf
+
 # Copy ssh stuff
 /bin/mkdir -p /mnt1/etc/ssh
 /bin/cp /etc/ssh/* /mnt1/etc/ssh/
