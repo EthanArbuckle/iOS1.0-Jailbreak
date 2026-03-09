@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>Label</key>
-	<string>org.thebends.openssh.sshd</string>
+	<string>org.openssh.sshd</string>
 	<key>OnDemand</key>
 	<false/>
 	<key>ProgramArguments</key>
