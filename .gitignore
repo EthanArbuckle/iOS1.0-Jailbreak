@@ -2,10 +2,9 @@
 .venv/
 .mypy_cache/
 .DS_Store
-*.xcuserdatad/
-*/xcuserdata
 /show_image/show_image
 /injector/injector
 /hooker/hooker.dylib
+/hooker
 /hacktivation_hooks/hacktivation.dylib
-/ios1-jb/ios1-jb
+/src/ios1-jb
