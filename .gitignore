@@ -2,9 +2,9 @@
 .venv/
 .mypy_cache/
 .DS_Store
-/show_image/show_image
-/injector/injector
 /hooker/hooker.dylib
 /hooker
-/hacktivation_hooks/hacktivation.dylib
 /src/ios1-jb
+/src/ramdisk/hacktivation_hooks/hacktivation.dylib
+/src/ramdisk/injector/injector
+/src/ramdisk/show_image/show_image

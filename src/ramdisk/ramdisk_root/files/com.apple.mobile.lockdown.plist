@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.apple.mobile.lockdown</string>
+	<key>OnDemand</key>
+	<false/>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>DYLD_INSERT_LIBRARIES</key>
+		<string>/usr/lib/hacktivation.dylib</string>
+	</dict>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/usr/libexec/lockdownd</string>
+	</array>
+	<key>ServiceIPC</key>
+	<false/>
+	<key>Sockets</key>
+	<dict>
+		<key>MyListenerSocket</key>
+		<dict>
+			<key>SockFamily</key>
+			<string>Unix</string>
+			<key>SockPathName</key>
+			<string>/var/run/lockdown/localcomm</string>
+		</dict>
+	</dict>
+</dict>
+</plist>
