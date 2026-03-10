@@ -33,9 +33,12 @@ fi
 
 # `show_image` draws our logo to the screen while in the ramdisk.
 # DYLD_*_PATH vars makes it look to /mnt1/ for the frameworks it depends on
-export DYLD_FRAMEWORK_PATH=/mnt1/System/Library/Frameworks
-export DYLD_LIBRARY_PATH=/mnt1/usr/lib
-/files/show_image /files/boot-logo-fullscreen.png &
+# export DYLD_FRAMEWORK_PATH=/mnt1/System/Library/Frameworks
+# export DYLD_LIBRARY_PATH=/mnt1/usr/lib
+# /files/show_image /files/boot-logo-fullscreen.png &
+# /mnt1/usr/bin/fb_draw &
+# unset DYLD_FRAMEWORK_PATH
+# unset DYLD_LIBRARY_PATH
 
 /usr/bin/nvram boot-args=""
 /usr/bin/nvram auto-boot="true"
@@ -46,19 +49,21 @@ export DYLD_LIBRARY_PATH=/mnt1/usr/lib
 
 # Enable logging to /var/log/syslog
 /bin/cp /files/com.apple.syslogd.plist /mnt1/System/Library/LaunchDaemons/com.apple.syslogd.plist
-/bin/cp /files/syslog.conf /mn1/etc/syslog.conf
+/bin/cp /files/syslog.conf /mnt1/etc/syslog.conf
 
 # Copy ssh stuff
 /bin/mkdir -p /mnt1/etc/ssh
 /bin/cp /etc/ssh/* /mnt1/etc/ssh/
-/bin/cp /etc/ssh_config /mnt1/etc/ssh/
-/bin/cp /etc/sshd_config /mnt1/etc/ssh/
+/bin/cp /etc/ssh_config /mnt1/etc/
+/bin/cp /etc/sshd_config /mnt1/etc/
 /bin/cp /usr/bin/scp /mnt1/usr/bin/scp
 /bin/cp /sbin/sshd  /mnt1/usr/sbin/sshd
 /bin/mkdir -p /mnt1/usr/libexec/
 /bin/cp /sbin/sftp-server /mnt1/usr/libexec/sftp-server
 /bin/cp /files/org.openssh.sshd.plist /mnt1/System/Library/LaunchDaemons/org.openssh.sshd.plist
-/bin/cp /etc/master.passwd /mnt/etc/master.passwd
+/bin/cp /etc/master.passwd /mnt1/etc/master.passwd
+/bin/cp /etc/passwd /mnt1/etc/passwd
+/bin/cp /etc/group /mnt1/etc/group
 
 # Copy some basic cmds over to the rootfs
 /bin/cp /bin/cat /mnt1/usr/bin/cat
@@ -73,7 +78,7 @@ export DYLD_LIBRARY_PATH=/mnt1/usr/lib
 /bin/cp /bin/mv /mnt1/usr/bin/mv
 /bin/cp /bin/ps /mnt1/usr/bin/ps
 /bin/cp /bin/rm /mnt1/usr/bin/rm
-/bin/cp /bin/sh /mnt1/usr/bin/sh
+/bin/cp /bin/sh /mnt1/bin/sh
 /bin/cp /bin/sleep /mnt1/usr/bin/sleep
 /bin/cp /bin/stty /mnt1/usr/bin/stty
 /bin/cp /bin/sync /mnt1/usr/bin/sync
@@ -97,8 +102,11 @@ export DYLD_LIBRARY_PATH=/mnt1/usr/lib
 /bin/cp /usr/lib/libncurses.5.4.dylib /mnt1/usr/lib/libncurses.5.4.dylib
 /bin/cp /usr/lib/libncurses.5.dylib /mnt1/usr/lib/libncurses.5.dylib
 /bin/cp /usr/lib/libncurses.dylib /mnt1/usr/lib/libncurses.dylib
+# Needed by `sshd`
+/bin/cp /usr/lib/libarmfp.dylib /mnt1/usr/lib/libarmfp.dylib
 
 # Boot device
+/bin/echo "Done setting up, rebooting"
 /sbin/reboot
 
-while (true); do sleep 1; done
+# while (true); do sleep 1; done
