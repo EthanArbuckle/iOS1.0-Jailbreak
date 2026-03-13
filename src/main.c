@@ -15,16 +15,38 @@
 
 #define STEP(expr, msg) if ((expr) != KERN_SUCCESS) { fprintf(stderr, msg "\n"); break; }
 
+static void print_usage(const char *prog_name) {
+    printf("Usage: %s [options]\n", prog_name);
+    printf("\n");
+    printf("Jailbreak for iOS 1.x devices (S5L8900)\n");
+    printf("\n");
+    printf("Options:\n");
+    printf("  -h, --help    Show this help message and exit\n");
+    printf("  -s            Enable serial output (boot-args: serial=3)\n");
+    printf("  -n            Normal boot (skip ramdisk, clear boot-args)\n");
+    printf("\n");
+    printf("Default behavior jailbreaks the device.\n");
+}
+
 int main(int argc, const char *argv[]) {
     bool enable_serial = false;
     bool normal_boot = false;
 
     for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "-s") == 0) {
+        if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
+            print_usage(argv[0]);
+            return EXIT_SUCCESS;
+        }
+        else if (strcmp(argv[i], "-s") == 0) {
             enable_serial = true;
         }
         else if (strcmp(argv[i], "-n") == 0) {
             normal_boot = true;
+        }
+        else {
+            fprintf(stderr, "Unknown option: %s\n", argv[i]);
+            print_usage(argv[0]);
+            return EXIT_FAILURE;
         }
     }
 
