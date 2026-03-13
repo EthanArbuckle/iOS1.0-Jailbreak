@@ -8,7 +8,14 @@ BOOTLOGO_PNG = bootlogo/boot-logo.png
 TEMPLATE_IMG2 = bootlogo/template.img2
 RAMDISK_IMG = ramdisk/ramdisk.img
 
+.PHONY: all clean ramdisk
+
 all: $(TARGET)
+
+ramdisk:
+	$(MAKE) -C ramdisk
+
+$(RAMDISK_IMG): ramdisk
 
 $(TARGET): $(SRC) $(BOOTLOGO_PNG) $(TEMPLATE_IMG2) $(RAMDISK_IMG)
 	@printf ".section __DATA,__bootlogo_png\n.globl _bootlogo_png_start\n_bootlogo_png_start:\n.incbin \"$(BOOTLOGO_PNG)\"\n" | $(CC) -c -x assembler - -o /dev/fd/3 3>&1 1>/dev/null | cat > /tmp/bp.o && \
@@ -18,4 +25,5 @@ $(TARGET): $(SRC) $(BOOTLOGO_PNG) $(TEMPLATE_IMG2) $(RAMDISK_IMG)
 	rm -f /tmp/bp.o /tmp/ti.o /tmp/rd.o
 
 clean:
+	$(MAKE) -C ramdisk clean
 	rm -f $(TARGET)
