@@ -95,6 +95,10 @@ fi
 /bin/cp /usr/bin/tar /mnt1/usr/bin/tar
 /bin/cp /usr/bin/umount /mnt1/usr/bin/umount
 /bin/cp /usr/bin/unzip /mnt1/usr/bin/unzip
+/bin/cp /usr/bin/tail /mnt1/usr/bin/tail
+/bin/cp /usr/bin/head /mnt1/usr/bin/head
+/bin/cp /usr/bin/id /mnt1/usr/bin/id
+/bin/cp /usr/bin/top /mnt1/usr/bin/top
 
 # Needed by `ls`
 /bin/cp /usr/lib/libintl.8.dylib /mnt1/usr/lib/libintl.8.dylib
@@ -104,6 +108,13 @@ fi
 /bin/cp /usr/lib/libncurses.dylib /mnt1/usr/lib/libncurses.dylib
 # Needed by `sshd`
 /bin/cp /usr/lib/libarmfp.dylib /mnt1/usr/lib/libarmfp.dylib
+# Needed by `top`
+/bin/cp /usr/lib/libpanel.5.dylib /mnt1/usr/lib/libpanel.5.dylib
+/bin/cp /usr/lib/libutil.dylib /mnt1/usr/lib/libutil.dylib
+
+# Without this, `top` and `nano` fail, and you can't delete chars with backspace in `sh`
+mkdir -p /mnt1/usr/share/terminfo/76
+/bin/cp /usr/share/terminfo/76/vt100 /mnt1/usr/share/terminfo/76/vt100
 
 # Boot device
 /bin/echo "Done setting up, rebooting"
