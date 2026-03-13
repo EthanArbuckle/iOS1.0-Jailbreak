@@ -16,6 +16,18 @@
 #define STEP(expr, msg) if ((expr) != KERN_SUCCESS) { fprintf(stderr, msg "\n"); break; }
 
 int main(int argc, const char *argv[]) {
+    bool enable_serial = false;
+    bool normal_boot = false;
+
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-s") == 0) {
+            enable_serial = true;
+        }
+        else if (strcmp(argv[i], "-n") == 0) {
+            normal_boot = true;
+        }
+    }
+
     idevice_t dev = {0};
     payload_t ramdisk_img = {0};
     payload_t bootlogo_png = {0};
@@ -50,7 +62,16 @@ int main(int argc, const char *argv[]) {
         // The device will boot unsigned ramdisks if they're loaded at an address > 0x9C000000
         printf("Sending ramdisk...\n");
         STEP(idevice_send_file(&dev, ramdisk_img.data, ramdisk_img.size, 0x09CC2000), "Failed to send ramdisk");
-        STEP(idevice_send_command(&dev, "setenv boot-args \"rd=md0 -s -x pmd0=0x09CC2000.0x0133D000\"\n"), "Failed to set boot-args");
+        
+        if (normal_boot) {
+            STEP(idevice_send_command(&dev, "setenv boot-args \"\"\n"), "Failed to set boot-args");
+        }
+        else if (enable_serial) {
+            STEP(idevice_send_command(&dev, "setenv boot-args \"rd=md0 serial=3 -s -x pmd0=0x09CC2000.0x0133D000\"\n"), "Failed to set boot-args");
+        }
+        else {
+            STEP(idevice_send_command(&dev, "setenv boot-args \"rd=md0 -s -x pmd0=0x09CC2000.0x0133D000\"\n"), "Failed to set boot-args");
+        }
         STEP(idevice_send_command(&dev, "saveenv\n"), "Failed to save environment");
 
         printf("Booting...\n");
