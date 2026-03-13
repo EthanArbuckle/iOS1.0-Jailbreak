@@ -31,14 +31,9 @@ fi
 
 /sbin/mount -uw /
 
-# `show_image` draws our logo to the screen while in the ramdisk.
+# `fb_draw` draws our logo to the screen while in the ramdisk.
 # DYLD_*_PATH vars makes it look to /mnt1/ for the frameworks it depends on
-# export DYLD_FRAMEWORK_PATH=/mnt1/System/Library/Frameworks
-# export DYLD_LIBRARY_PATH=/mnt1/usr/lib
-# /files/show_image /files/boot-logo-fullscreen.png &
-# /mnt1/usr/bin/fb_draw &
-# unset DYLD_FRAMEWORK_PATH
-# unset DYLD_LIBRARY_PATH
+DYLD_FRAMEWORK_PATH=/mnt1/System/Library/Frameworks DYLD_LIBRARY_PATH=/mnt1/usr/lib /files/draw_image /files/boot-logo-fullscreen.png
 
 /usr/bin/nvram boot-args=""
 /usr/bin/nvram auto-boot="true"
@@ -50,6 +45,11 @@ fi
 # Enable logging to /var/log/syslog
 /bin/cp /files/com.apple.syslogd.plist /mnt1/System/Library/LaunchDaemons/com.apple.syslogd.plist
 /bin/cp /files/syslog.conf /mnt1/etc/syslog.conf
+
+# Copy utils
+/bin/cp /files/screenshot /mnt1/usr/bin/screenshot
+/bin/cp /files/injector /mnt1/usr/bin/inject
+/bin/cp /files/hacktivation.dylib /mnt1/usr/lib/hacktivation.dylib
 
 # Copy ssh stuff
 /bin/mkdir -p /mnt1/etc/ssh
