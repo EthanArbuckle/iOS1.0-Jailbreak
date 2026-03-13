@@ -2,8 +2,8 @@ CC = clang
 SYSROOT = /Users/ethanarbuckle/Downloads/iPhoneOS1.1.5.sdk
 CRT = /Users/ethanarbuckle/Downloads/iphone-dev/trunk/csu/crt1.o
 LD_DIR = /Users/ethanarbuckle/Downloads/ios1-ld
-TARGET = fb_draw
-SRC = main.m /Users/ethanarbuckle/Downloads/iPhoneOS1.1.5.sdk/usr/lib/gcc/arm-apple-darwin9/4.0.1/libgcc.a
+TARGET = draw_image
+SRC = main.m $(SYSROOT)/usr/lib/gcc/arm-apple-darwin9/4.0.1/libgcc.a
 
 all: $(TARGET)
 

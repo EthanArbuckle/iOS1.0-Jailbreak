@@ -7,6 +7,5 @@
 /src/ios1-jb
 /src/ramdisk/hacktivation_hooks/hacktivation.dylib
 /src/ramdisk/injector/injector
-/src/ramdisk/show_image/show_image
-/src/ramdisk/fb_draw/fb_draw
 /src/ramdisk/screenshot/screenshot
+/src/ramdisk/draw_image/draw_image
