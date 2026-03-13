@@ -114,7 +114,9 @@ DYLD_FRAMEWORK_PATH=/mnt1/System/Library/Frameworks DYLD_LIBRARY_PATH=/mnt1/usr/
 
 # Without this, `top` and `nano` fail, and you can't delete chars with backspace in `sh`
 mkdir -p /mnt1/usr/share/terminfo/76
+mkdir -p /mnt1/usr/share/terminfo/78
 /bin/cp /usr/share/terminfo/76/vt100 /mnt1/usr/share/terminfo/76/vt100
+/bin/cp /usr/share/terminfo/78/xterm-256color /mnt1/usr/share/terminfo/78/xterm-256color
 
 # Boot device
 /bin/echo "Done setting up, rebooting"
