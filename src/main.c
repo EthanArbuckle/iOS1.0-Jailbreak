@@ -63,15 +63,20 @@ int main(int argc, const char *argv[]) {
         printf("Sending ramdisk...\n");
         STEP(idevice_send_file(&dev, ramdisk_img.data, ramdisk_img.size, 0x09CC2000), "Failed to send ramdisk");
         
+        const char *boot_args;
         if (normal_boot) {
-            STEP(idevice_send_command(&dev, "setenv boot-args \"\"\n"), "Failed to set boot-args");
+            boot_args = "";
         }
         else if (enable_serial) {
-            STEP(idevice_send_command(&dev, "setenv boot-args \"rd=md0 serial=3 -s -x pmd0=0x09CC2000.0x0133D000\"\n"), "Failed to set boot-args");
+            boot_args = "rd=md0 serial=3 -s -x pmd0=0x09CC2000.0x0133D000";
         }
         else {
-            STEP(idevice_send_command(&dev, "setenv boot-args \"rd=md0 -s -x pmd0=0x09CC2000.0x0133D000\"\n"), "Failed to set boot-args");
+            boot_args = "rd=md0 -s -x pmd0=0x09CC2000.0x0133D000";
         }
+
+        char cmd[256];
+        snprintf(cmd, sizeof(cmd), "setenv boot-args \"%s\"\n", boot_args);
+        STEP(idevice_send_command(&dev, cmd), "Failed to set boot-args");
         STEP(idevice_send_command(&dev, "saveenv\n"), "Failed to save environment");
 
         printf("Booting...\n");
