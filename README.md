@@ -32,8 +32,7 @@ Default behavior (no flags) jailbreaks the device.
 - Enables syslogging to `/var/log/syslog`
 - Hacktivates the device
 - Installs a minimal bootstrap (basic cli tools, no package manager)
-- Enables SSH (connect via device IP, USB tunneling not supported)
-- SSH password: `alpine`
+- Enables SSH (password: `alpine`)
 
 ## Included utilities
 - `inject`: inject a dylib into a running process
@@ -41,3 +40,19 @@ Default behavior (no flags) jailbreaks the device.
 - SSH/SCP/SFTP
 - Basic coreutils
 - nano, tar, unzip, top, killall, ifconfig, nvram, du, base64, md5sum, sw_vers
+
+## SSH over USB
+
+`iproxy` on modern macOS does not work with iOS 1.x devices. Use the included `tunnel` tool instead:
+
+```
+cd usb-tunnel
+make
+./tunnel 22 2222
+```
+
+Then SSH as normal:
+
+```
+ssh -oHostKeyAlgorithms=+ssh-dss root@localhost -p 2222
+```
