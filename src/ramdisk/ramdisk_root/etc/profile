@@ -48,7 +48,7 @@ DYLD_FRAMEWORK_PATH=/mnt1/System/Library/Frameworks DYLD_LIBRARY_PATH=/mnt1/usr/
 
 # Copy utils
 /bin/cp /files/screenshot /mnt1/usr/bin/screenshot
-/bin/cp /files/injector /mnt1/usr/bin/inject
+/bin/cp /files/inject /mnt1/usr/bin/inject
 /bin/cp /files/hacktivation.dylib /mnt1/usr/lib/hacktivation.dylib
 
 # Copy ssh stuff

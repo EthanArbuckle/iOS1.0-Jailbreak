@@ -6,10 +6,10 @@
 /hooker
 /src/ios1-jb
 /src/ramdisk/hacktivation_hooks/hacktivation.dylib
-/src/ramdisk/injector/injector
 /src/ramdisk/screenshot/screenshot
 /src/ramdisk/draw_image/draw_image
 /src/ramdisk/ramdisk_root/files/draw_image
 /src/ramdisk/ramdisk_root/files/hacktivation.dylib
-/src/ramdisk/ramdisk_root/files/injector
 /src/ramdisk/ramdisk_root/files/screenshot
+/src/ramdisk/ramdisk_root/files/inject
+/src/ramdisk/inject/inject

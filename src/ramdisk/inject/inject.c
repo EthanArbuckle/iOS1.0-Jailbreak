@@ -15,14 +15,41 @@ struct arm_thread_state {
     unsigned int cpsr;
 };
 
+extern bool is_button_pressed(void);
+
 int main(int argc, char *argv[]) {
-    if (argc < 2) {
-        printf("usage: %s <pid> <dylib_path>\n", argv[0]);
+    int should_force = 0;
+    int pid = -1;
+    char *dylib_path = NULL;
+
+    for (int i = 1; i < argc; i++) {
+        // -f will force injection even if hardware button is pressed
+        if (strcmp(argv[i], "-f") == 0) {
+            should_force = 1;
+            continue;
+        }
+
+        if (pid == -1) {
+            pid = atoi(argv[i]);
+            continue;
+        }
+
+        if (dylib_path == NULL) {
+            dylib_path = argv[i];
+            continue;
+        }
+    }
+
+    if (pid == -1 || dylib_path == NULL) {
+        printf("usage: %s [-f] <pid> <dylib_path>\n", argv[0]);
         return 1;
     }
 
-    int pid = atoi(argv[1]);
-    char *dylib_path = argv[2];
+    if (!should_force && is_button_pressed()) {
+        printf("Home or VolumeUp buttons are pressed, not injecting. Use -f to force\n");
+        return 1;
+    }
+
     size_t path_len = strlen(dylib_path) + 1;
 
     void *handle = dlopen(NULL, RTLD_LAZY);
@@ -106,13 +133,19 @@ int main(int argc, char *argv[]) {
 
     unsigned int da = (unsigned int)data_addr;
     unsigned int shellcode[] = {
-        0xe59f4014,
-        0xe5940004,
-        0xe3a01002,
-        0xe594c008,
-        0xe12fff3c,
-        0xe3a00000,
-        0xe594f000,
+        // r4 = start of argument data
+        0xe59f4014, // ldr r4, [pc, #0x14]
+        // path = r4 + 4
+        0xe5940004, // ldr r0, [r4, #4]
+        // r1 = RTLD_NOW
+        0xe3a01002, // mov r1, #2
+        // dlopen_addr = r4 + 8
+        0xe594c008, // ldr ip, [r4, #8]
+        // dlopen()
+        0xe12fff3c, // blx ip
+        // return to orig
+        0xe3a00000, // mov r0, #0
+        0xe594f000, // ldr pc, [r4]
         da,
     };
 
