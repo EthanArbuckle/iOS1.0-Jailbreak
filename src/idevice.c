@@ -32,19 +32,6 @@ kern_return_t idevice_open(idevice_t *dev) {
     if (dev->handle != NULL) {
         dev->mode = DEVICE_RECOVERY;
     }
-    /*
-    else {
-        printf("No device found in Recovery mode, trying Normal mode...\n");
-        dev->handle = libusb_open_device_with_vid_pid(dev->ctx, APPLE_VID, NORMAL_PID);
-        if (dev->handle != NULL) {
-            printf("Device found in Normal mode.\n");
-            dev->mode = DEVICE_NORMAL;
-        }
-        else {
-            printf("No device found in Normal mode either.\n");
-        }
-    }
-    */
     
     if (dev->handle == NULL) {
         dev->mode = DEVICE_NOT_FOUND;

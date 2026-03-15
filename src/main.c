@@ -11,7 +11,7 @@
 #include "file_payload.h"
 #include "ibootim.h"
 #include "idevice.h"
-
+#include "common/lockdownd.h"
 
 #define STEP(expr, msg) if ((expr) != KERN_SUCCESS) { fprintf(stderr, msg "\n"); break; }
 
@@ -26,6 +26,49 @@ static void print_usage(const char *prog_name) {
     printf("  -n            Normal boot (skip ramdisk, clear boot-args)\n");
     printf("\n");
     printf("Default behavior jailbreaks the device.\n");
+}
+
+static void enter_recovery_mode(void) {
+    lockdownd_client_t client;
+    memset(&client, 0, sizeof(client));
+    if (!lockdownd_client_open(&client)) {
+        fprintf(stderr, "Failed to connect to lockdownd\n");
+        return;
+    }
+
+    char session_id[64] = {0};
+    char start_err[128] = {0};
+    if (lockdownd_client_start_paired_session(&client, session_id, sizeof(session_id), start_err, sizeof(start_err)) != 0) {
+        fprintf(stderr, "Failed to start paired session: %s\n", start_err[0] ? start_err : "unknown error");
+        lockdownd_client_cleanup(&client);
+        return;
+    }
+
+    char fw_version[16] = {0};
+    if (!lockdownd_get_value_string(&client.session, "ProductVersion", fw_version, sizeof(fw_version))) {
+        fprintf(stderr, "GetValue(Firmware Version) failed\n");
+        lockdownd_client_cleanup(&client);
+        exit(1);
+    }
+
+    int major = 0;
+    sscanf(fw_version, "%d", &major);
+    if (major >= 2) {
+        fprintf(stderr, "Unsupported firmware version. This tool only works on iOS 1.x.\n");
+        lockdownd_client_cleanup(&client);
+        exit(1);
+    }
+
+    printf("Sending device to recovery mode... (may be slow for iPhone 2G)\n");
+    CFDictionaryRef response = NULL;
+    if (!lockdownd_send_enter_recovery(&client.session, session_id, &response)) {
+        fprintf(stderr, "Failed to send EnterRecovery command\n");
+        lockdownd_client_cleanup(&client);
+        return;
+    }
+    CFRelease(response);
+
+    lockdownd_client_cleanup(&client);
 }
 
 int main(int argc, const char *argv[]) {
@@ -60,8 +103,14 @@ int main(int argc, const char *argv[]) {
     
     int exit_code = EXIT_FAILURE;
     do {
-        printf("\nSearching for device...\n");
-        STEP(idevice_open(&dev), "No device found in Recovery mode");
+        enter_recovery_mode();
+
+        printf("\nWaiting for recovery-mode device...\n");
+        while (idevice_open(&dev) != KERN_SUCCESS) {
+            idevice_close(&dev);
+            sleep(1);
+        }
+
         printf("Device connected in %s mode\n", device_mode_string(dev.mode));
         
         // Load ramdisk and bootlogo files
