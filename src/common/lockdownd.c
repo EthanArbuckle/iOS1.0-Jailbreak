@@ -345,9 +345,9 @@ void lockdownd_client_cleanup(lockdownd_client_t *client) {
         return;
     }
 
-    session_close(&client->session);
-
     if (client->usb_handle) {
+        session_close(&client->session);
+
         libusb_release_interface(client->usb_handle, client->intf_num);
         libusb_close(client->usb_handle);
         client->usb_handle = NULL;
@@ -372,7 +372,6 @@ int lockdownd_client_open(lockdownd_client_t *client) {
     }
 
     if (find_and_claim(client->usb_ctx, &client->usb_handle, &client->ep_out, &client->ep_in, &client->intf_num) < 0) {
-        fprintf(stderr, "No device found\n");
         lockdownd_client_cleanup(client);
         return 0;
     }

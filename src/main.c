@@ -15,6 +15,35 @@
 
 #define STEP(expr, msg) if ((expr) != KERN_SUCCESS) { fprintf(stderr, msg "\n"); break; }
 
+typedef struct {
+    bool enable_serial;
+    bool normal_boot;
+    bool ssh_ramdisk;
+} options_t;
+
+typedef enum {
+    DEVICE_TYPE_UNKNOWN,
+    DEVICE_TYPE_IPHONE,
+    DEVICE_TYPE_IPOD,
+} device_type_t;
+
+static device_type_t probe_device_type(lockdownd_client_t *client) {
+    char product_type[64] = {0};
+    if (!lockdownd_get_value_string(&client->session, "ProductType", product_type, sizeof(product_type))) {
+        return DEVICE_TYPE_UNKNOWN;
+    }
+
+    if (strncmp(product_type, "iPhone", 6) == 0) {
+        return DEVICE_TYPE_IPHONE;
+    }
+
+    if (strncmp(product_type, "iPod", 4) == 0) {
+        return DEVICE_TYPE_IPOD;
+    }
+
+    return DEVICE_TYPE_UNKNOWN;
+}
+
 static void print_usage(const char *prog_name) {
     printf("Usage: %s [options]\n", prog_name);
     printf("\n");
@@ -24,16 +53,17 @@ static void print_usage(const char *prog_name) {
     printf("  -h, --help    Show this help message and exit\n");
     printf("  -s            Enable serial output (boot-args: serial=3)\n");
     printf("  -n            Normal boot (skip ramdisk, clear boot-args)\n");
+    printf("  -r            SSH ramdisk only (no jailbreak)\n");
     printf("\n");
     printf("Default behavior jailbreaks the device.\n");
 }
 
-static void enter_recovery_mode(void) {
+static kern_return_t enter_recovery_mode(bool *out_is_iphone) {
     lockdownd_client_t client;
     memset(&client, 0, sizeof(client));
     if (!lockdownd_client_open(&client)) {
         fprintf(stderr, "Failed to connect to lockdownd\n");
-        return;
+        return KERN_FAILURE;
     }
 
     char session_id[64] = {0};
@@ -41,22 +71,27 @@ static void enter_recovery_mode(void) {
     if (lockdownd_client_start_paired_session(&client, session_id, sizeof(session_id), start_err, sizeof(start_err)) != 0) {
         fprintf(stderr, "Failed to start paired session: %s\n", start_err[0] ? start_err : "unknown error");
         lockdownd_client_cleanup(&client);
-        return;
+        return KERN_FAILURE;
     }
 
     char fw_version[16] = {0};
     if (!lockdownd_get_value_string(&client.session, "ProductVersion", fw_version, sizeof(fw_version))) {
         fprintf(stderr, "GetValue(Firmware Version) failed\n");
         lockdownd_client_cleanup(&client);
-        exit(1);
+        return KERN_FAILURE;
     }
 
     int major = 0;
     sscanf(fw_version, "%d", &major);
     if (major >= 2) {
-        fprintf(stderr, "Unsupported firmware version. This tool only works on iOS 1.x.\n");
+        fprintf(stderr, "Unsupported firmware version. This only works on iOS 1.x\n");
         lockdownd_client_cleanup(&client);
-        exit(1);
+        return KERN_FAILURE;
+    }
+
+    device_type_t dtype = probe_device_type(&client);
+    if (out_is_iphone != NULL) {
+        *out_is_iphone = (dtype == DEVICE_TYPE_IPHONE);
     }
 
     printf("Sending device to recovery mode... (may be slow for iPhone 2G)\n");
@@ -64,27 +99,29 @@ static void enter_recovery_mode(void) {
     if (!lockdownd_send_enter_recovery(&client.session, session_id, &response)) {
         fprintf(stderr, "Failed to send EnterRecovery command\n");
         lockdownd_client_cleanup(&client);
-        return;
+        return KERN_FAILURE;
     }
     CFRelease(response);
 
     lockdownd_client_cleanup(&client);
+    return KERN_SUCCESS;
 }
 
 int main(int argc, const char *argv[]) {
-    bool enable_serial = false;
-    bool normal_boot = false;
-
+    options_t opts = {0};
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             print_usage(argv[0]);
             return EXIT_SUCCESS;
         }
         else if (strcmp(argv[i], "-s") == 0) {
-            enable_serial = true;
+            opts.enable_serial = true;
         }
         else if (strcmp(argv[i], "-n") == 0) {
-            normal_boot = true;
+            opts.normal_boot = true;
+        }
+        else if (strcmp(argv[i], "-r") == 0) {
+            opts.ssh_ramdisk = true;
         }
         else {
             fprintf(stderr, "Unknown option: %s\n", argv[i]);
@@ -100,10 +137,11 @@ int main(int argc, const char *argv[]) {
     exploit_image_t bootlogo_container = {0};
     uint8_t *ibootim_buf = NULL;
     size_t ibootim_size = 0;
-    
+    bool is_iphone = false;
+
     int exit_code = EXIT_FAILURE;
     do {
-        enter_recovery_mode();
+        enter_recovery_mode(&is_iphone);
 
         printf("\nWaiting for recovery-mode device...\n");
         while (idevice_open(&dev) != KERN_SUCCESS) {
@@ -135,10 +173,10 @@ int main(int argc, const char *argv[]) {
         STEP(idevice_send_file(&dev, ramdisk_img.data, ramdisk_img.size, 0x09CC2000), "Failed to send ramdisk");
         
         const char *boot_args;
-        if (normal_boot) {
+        if (opts.normal_boot) {
             boot_args = "";
         }
-        else if (enable_serial) {
+        else if (opts.enable_serial) {
             boot_args = "rd=md0 serial=3 -s -x pmd0=0x09CC2000.0x0133D000";
         }
         else {
@@ -148,6 +186,18 @@ int main(int argc, const char *argv[]) {
         char cmd[256];
         snprintf(cmd, sizeof(cmd), "setenv boot-args \"%s\"\n", boot_args);
         STEP(idevice_send_command(&dev, cmd), "Failed to set boot-args");
+
+        if (!opts.normal_boot) {
+            if (opts.ssh_ramdisk) {
+                printf("Booting to SSH ramdisk...\n");
+                STEP(idevice_send_command(&dev, "setenv ssh_ramdisk 1\n"), "Failed to set ssh_ramdisk env");
+            }
+            
+            if (is_iphone) {
+                STEP(idevice_send_command(&dev, "setenv should_hacktivate 1\n"), "Failed to set should_hactivate env");
+            }
+        }
+
         STEP(idevice_send_command(&dev, "saveenv\n"), "Failed to save environment");
 
         printf("Booting...\n");

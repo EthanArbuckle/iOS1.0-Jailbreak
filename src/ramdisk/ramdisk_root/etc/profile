@@ -7,9 +7,28 @@ export PATH="/bin:/sbin:/usr/bin:/usr/local/bin:/usr/sbin"
 /bin/echo -ne "\x1b[H\x1b[J"
 
 /bin/echo "    hello from ramdisk" 
-/bin/echo     
-/bin/echo "mounting filesystem..."
+/bin/echo
 
+if [ "`/usr/bin/nvram ssh_ramdisk 2>/dev/null | /bin/cut -f 2`" = "1" ]; then
+    /usr/bin/nvram boot-args=""
+    /usr/bin/nvram auto-boot="true"
+
+    /usr/bin/ifconfig lo0 127.0.0.1 up
+    /usr/bin/ifconfig en0 169.254.0.1 netmask 255.255.0.0 up
+
+    /sbin/mount -uw /
+
+    /bin/echo "starting sshd..."
+    /sbin/sshd -D
+
+    while (true); do sleep 1; done
+    /sbin/reboot
+fi
+
+/usr/bin/nvram boot-args=""
+/usr/bin/nvram auto-boot="true"
+
+/bin/echo "mounting filesystem..."
 # FTL is slow on iPhone 2g. Wait a bit before trying to touch the fs
 /bin/sleep 5
 /sbin/fsck_hfs -fy /dev/disk0s1 >/dev/null 2>&1
@@ -29,15 +48,9 @@ if [ ! -f "/mnt1/System/Library/CoreServices/SystemVersion.plist" ]; then
     /sbin/mount_hfs -o noasync,sync /dev/disk0s2 /mnt2 >/dev/null 2>&1
 fi 
 
-/sbin/mount -uw /
-
 # `fb_draw` draws our logo to the screen while in the ramdisk.
 # DYLD_*_PATH vars makes it look to /mnt1/ for the frameworks it depends on
 DYLD_FRAMEWORK_PATH=/mnt1/System/Library/Frameworks DYLD_LIBRARY_PATH=/mnt1/usr/lib /files/draw_image /files/boot-logo-fullscreen.png
-
-/usr/bin/nvram boot-args=""
-/usr/bin/nvram auto-boot="true"
-# /usr/bin/nvram auto-boot="false"
 
 # Copy an fstab that mounts rootfs as r/w
 /bin/cp /files/fstab /mnt1/etc/fstab
@@ -121,5 +134,3 @@ mkdir -p /mnt1/usr/share/terminfo/78
 # Boot device
 /bin/echo "Done setting up, rebooting"
 /sbin/reboot
-
-# while (true); do sleep 1; done
