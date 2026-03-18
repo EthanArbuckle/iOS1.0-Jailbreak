@@ -12,6 +12,7 @@ export PATH="/bin:/sbin:/usr/bin:/usr/local/bin:/usr/sbin"
 if [ "`/usr/bin/nvram ssh_ramdisk 2>/dev/null | /bin/cut -f 2`" = "1" ]; then
     /usr/bin/nvram boot-args=""
     /usr/bin/nvram auto-boot="true"
+    /usr/bin/nvram -d ssh_ramdisk
 
     /usr/bin/ifconfig lo0 127.0.0.1 up
     /usr/bin/ifconfig en0 169.254.0.1 netmask 255.255.0.0 up
