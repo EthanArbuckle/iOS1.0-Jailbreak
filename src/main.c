@@ -19,6 +19,7 @@ typedef struct {
     bool enable_serial;
     bool normal_boot;
     bool ssh_ramdisk;
+    bool just_recovery;
 } options_t;
 
 typedef enum {
@@ -52,8 +53,9 @@ static void print_usage(const char *prog_name) {
     printf("Options:\n");
     printf("  -h, --help    Show this help message and exit\n");
     printf("  -s            Enable serial output (boot-args: serial=3)\n");
-    printf("  -n            Normal boot (skip ramdisk, clear boot-args)\n");
+    printf("  -n            Normal boot (exit recovery, clear boot-args)\n");
     printf("  -r            SSH ramdisk only (no jailbreak)\n");
+    printf("  --recovery    Just enter recovery mode\n");
     printf("\n");
     printf("Default behavior jailbreaks the device.\n");
 }
@@ -123,6 +125,9 @@ int main(int argc, const char *argv[]) {
         else if (strcmp(argv[i], "-r") == 0) {
             opts.ssh_ramdisk = true;
         }
+        else if (strcmp(argv[i], "--recovery") == 0) {
+            opts.just_recovery = true;
+        }
         else {
             fprintf(stderr, "Unknown option: %s\n", argv[i]);
             print_usage(argv[0]);
@@ -142,6 +147,10 @@ int main(int argc, const char *argv[]) {
     int exit_code = EXIT_FAILURE;
     do {
         enter_recovery_mode(&is_iphone);
+        if (opts.just_recovery) {
+            exit_code = EXIT_SUCCESS;
+            break;
+        }
 
         printf("\nWaiting for recovery-mode device...\n");
         while (idevice_open(&dev) != KERN_SUCCESS) {
@@ -192,16 +201,21 @@ int main(int argc, const char *argv[]) {
                 printf("Booting to SSH ramdisk...\n");
                 STEP(idevice_send_command(&dev, "setenv ssh_ramdisk 1\n"), "Failed to set ssh_ramdisk env");
             }
+            else {
+                STEP(idevice_send_command(&dev, "setenv ssh_ramdisk 0\n"), "Failed to set ssh_ramdisk env");
+            }
             
             if (is_iphone) {
                 STEP(idevice_send_command(&dev, "setenv should_hacktivate 1\n"), "Failed to set should_hactivate env");
+            }
+            else {
+                STEP(idevice_send_command(&dev, "setenv should_hacktivate 0\n"), "Failed to set should_hactivate env");
             }
         }
 
         STEP(idevice_send_command(&dev, "saveenv\n"), "Failed to save environment");
 
         printf("Booting...\n");
-        STEP(idevice_send_command(&dev, "bootx\n"), "Failed to execute bootx");
         idevice_send_command(&dev, "fsboot\n");
 
         exit_code = EXIT_SUCCESS;
@@ -212,7 +226,9 @@ int main(int argc, const char *argv[]) {
     payload_free(&bootlogo_png);
     payload_free(&bootlogo_template_img);
     exploit_image_free(&bootlogo_container);
-    free(ibootim_buf);
+    if (ibootim_buf != NULL) {
+        free(ibootim_buf);
+    }
 
     return exit_code;
 }
