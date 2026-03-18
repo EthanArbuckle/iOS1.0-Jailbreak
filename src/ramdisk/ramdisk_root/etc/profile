@@ -113,6 +113,7 @@ DYLD_FRAMEWORK_PATH=/mnt1/System/Library/Frameworks DYLD_LIBRARY_PATH=/mnt1/usr/
 /bin/cp /usr/bin/head /mnt1/usr/bin/head
 /bin/cp /usr/bin/id /mnt1/usr/bin/id
 /bin/cp /usr/bin/top /mnt1/usr/bin/top
+/bin/cp /usr/bin/ioreg /mnt1/usr/bin/ioreg
 
 # Needed by `ls`
 /bin/cp /usr/lib/libintl.8.dylib /mnt1/usr/lib/libintl.8.dylib
