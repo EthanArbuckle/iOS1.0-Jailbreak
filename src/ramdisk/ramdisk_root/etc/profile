@@ -80,6 +80,7 @@ DYLD_FRAMEWORK_PATH=/mnt1/System/Library/Frameworks DYLD_LIBRARY_PATH=/mnt1/usr/
 /bin/cp /etc/group /mnt1/etc/group
 
 # Copy some basic cmds over to the rootfs
+/bin/cp /sbin/reboot /mnt1/sbin/reboot
 /bin/cp /bin/cat /mnt1/usr/bin/cat
 /bin/cp /bin/chmod /mnt1/usr/bin/chmod
 /bin/cp /bin/chown /mnt1/usr/bin/chown
