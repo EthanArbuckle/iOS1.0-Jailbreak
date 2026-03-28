@@ -10,7 +10,7 @@ make
 
 ## Usage
 
-Put your device in Recovery mode, then run:
+With your device connected in either Normal or Recovery mode, run:
 
 ```
 ./src/ios1-jb
