@@ -204,7 +204,7 @@ static int exit_recovery(idevice_t *dev) {
         return -1;
     }
 
-    send_command(dev, "fsboot");
+    send_command(dev, "reboot");
 
     printf("[+] Device should be booting normally\n");
     return 0;
