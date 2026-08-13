@@ -19,6 +19,8 @@ if [ "`/usr/bin/nvram ssh_ramdisk 2>/dev/null | /bin/cut -f 2`" = "1" ]; then
 
     /sbin/mount -uw /
 
+    /files/usb_kick
+
     /bin/echo "starting sshd..."
     /sbin/sshd -D
 

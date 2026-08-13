@@ -15,3 +15,5 @@
 /src/ramdisk/inject/inject
 /usb-tunnel/tunnel
 /irecovery/irecovery
+/src/ramdisk/ramdisk_root/files/usb_kick
+/src/ramdisk/usb_kick/usb_kick

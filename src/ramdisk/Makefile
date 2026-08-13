@@ -2,6 +2,7 @@ DRAW_IMAGE_DIR := draw_image
 SCREENSHOT_DIR := screenshot
 INJECT_DIR := inject
 HACKTIVATION_HOOKS_DIR := hacktivation_hooks
+USB_KICK_DIR := usb_kick
 
 RAMDISK_ROOT := ramdisk_root
 RAMDISK_FILES := $(RAMDISK_ROOT)/files
@@ -10,11 +11,13 @@ DRAW_IMAGE_BIN := $(DRAW_IMAGE_DIR)/draw_image
 SCREENSHOT_BIN := $(SCREENSHOT_DIR)/screenshot
 INJECT_BIN := $(INJECT_DIR)/inject
 HACKTIVATION_HOOKS_DYLIB := $(HACKTIVATION_HOOKS_DIR)/hacktivation.dylib
+USB_KICK_BIN := $(USB_KICK_DIR)/usb_kick
 
 DRAW_IMAGE_DST := $(RAMDISK_FILES)/draw_image
 SCREENSHOT_DST := $(RAMDISK_FILES)/screenshot
 INJECT_DST := $(RAMDISK_FILES)/inject
 HACKTIVATION_HOOKS_DST := $(RAMDISK_FILES)/hacktivation.dylib
+USB_KICK_DST := $(RAMDISK_FILES)/usb_kick
 
 BUILD_SCRIPT := build_ramdisk.py
 
@@ -28,6 +31,7 @@ subprojects:
 	$(MAKE) -C $(SCREENSHOT_DIR)
 	$(MAKE) -C $(INJECT_DIR)
 	$(MAKE) -C $(HACKTIVATION_HOOKS_DIR)
+	$(MAKE) -C $(USB_KICK_DIR)
 
 
 copy_bins: subprojects
@@ -35,6 +39,7 @@ copy_bins: subprojects
 	cp $(SCREENSHOT_BIN) $(SCREENSHOT_DST)
 	cp $(INJECT_BIN) $(INJECT_DST)
 	cp $(HACKTIVATION_HOOKS_DYLIB) $(HACKTIVATION_HOOKS_DST)
+	cp $(USB_KICK_BIN) $(USB_KICK_DST)
 
 
 ramdisk: copy_bins
@@ -50,3 +55,4 @@ clean:
 	rm -f $(SCREENSHOT_DST)
 	rm -f $(INJECT_DST)
 	rm -f $(HACKTIVATION_HOOKS_DST)
+	rm -f $(USB_KICK_DST)
