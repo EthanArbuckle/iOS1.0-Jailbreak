@@ -1,6 +1,7 @@
 #ifndef MUX_H
 #define MUX_H
 
+#include <string.h>
 #include <libusb-1.0/libusb.h>
 
 #define APPLE_VENDOR_ID 0x05ac
