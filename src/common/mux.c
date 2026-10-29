@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <time.h>
 #include <netinet/in.h>
 #include "mux.h"
 
